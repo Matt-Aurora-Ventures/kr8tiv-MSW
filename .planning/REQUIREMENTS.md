@@ -155,9 +155,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 **Coverage:**
 - v1 requirements: 43 total
-- Mapped to phases: 43
+- Mapped to phases: 43 (Phases 1-5)
 - Unmapped: 0
+- Phase 6: Integration phase (validates all requirements, introduces no new ones)
 
 ---
 *Requirements defined: 2026-02-02*
-*Last updated: 2026-02-02 after initial definition*
+*Last updated: 2026-02-02 after roadmap creation*

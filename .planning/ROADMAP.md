@@ -31,15 +31,15 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Automation passes basic bot detection (no CAPTCHA triggers, no logout cascades) with humanized delays
   4. Selectors find NotebookLM UI elements via semantic/accessibility tree methods, not brittle CSS classes
   5. Response extraction correctly waits for streaming completion before returning content
-**Plans**: TBD
+**Plans:** 6 plans in 4 waves
 
 Plans:
-- [ ] 01-01: Playwright driver setup with stealth configuration
-- [ ] 01-02: Chrome profile persistence and session management
-- [ ] 01-03: NotebookLM navigation and connection
-- [ ] 01-04: Resilient selector layer with semantic selectors
-- [ ] 01-05: Humanization patterns and bot mitigation
-- [ ] 01-06: Response streaming detection and extraction
+- [ ] 01-01-PLAN.md — Project scaffold + Playwright driver + stealth config (Wave 1)
+- [ ] 01-02-PLAN.md — Chrome profile persistence + single-instance locking (Wave 1)
+- [ ] 01-03-PLAN.md — NotebookLM navigator + connection detection (Wave 2)
+- [ ] 01-04-PLAN.md — Semantic selector registry + humanization utilities (Wave 2)
+- [ ] 01-05-PLAN.md — Streaming completion detection + response extraction (Wave 3)
+- [ ] 01-06-PLAN.md — Barrel exports + build verification + smoke test (Wave 4)
 
 ### Phase 2: Auto-Conversation Engine
 **Goal**: Automatic exploration of NotebookLM suggested topics with relevance filtering to build comprehensive research
@@ -153,7 +153,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Browser Automation Foundation | 0/6 | Not started | - |
+| 1. Browser Automation Foundation | 0/6 | Planned (4 waves) | - |
 | 2. Auto-Conversation Engine | 0/6 | Not started | - |
 | 3. Bidirectional Communication | 0/8 | Not started | - |
 | 4. MCP Server | 0/8 | Not started | - |
