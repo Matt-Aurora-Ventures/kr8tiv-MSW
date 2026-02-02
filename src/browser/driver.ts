@@ -6,9 +6,9 @@
  * triggering bot detection.
  */
 
-import * as fs from 'node:fs';
 import type { BrowserContext, Page } from 'playwright';
 import { configureStealthBrowser } from './stealth.js';
+import { ProfileManager } from './profile.js';
 import {
   type BrowserConfig,
   type LaunchOptions,
@@ -19,28 +19,30 @@ import {
 export class BrowserDriver {
   private config: LaunchOptions;
   private context: BrowserContext | null = null;
+  private profileManager: ProfileManager;
 
   constructor(config?: Partial<LaunchOptions>) {
     this.config = {
       ...DEFAULT_BROWSER_CONFIG,
       ...config,
     };
+    this.profileManager = new ProfileManager(this.config.profileDir);
   }
 
   /**
    * Launch a persistent Chromium browser context with stealth plugins.
    *
-   * Creates the profile directory if it does not exist, configures stealth
-   * evasions, and opens a persistent context that preserves cookies and
-   * local storage across sessions.
+   * Acquires a profile lock via ProfileManager, configures stealth evasions,
+   * and opens a persistent context that preserves cookies and local storage
+   * across sessions.
    */
   async launch(): Promise<BrowserContext> {
     if (this.context) {
       return this.context;
     }
 
-    // Ensure profile directory exists
-    fs.mkdirSync(this.config.profileDir, { recursive: true });
+    // Ensure profile directory exists and acquire lock
+    const profileDir = this.profileManager.getProfileDir();
 
     // Get stealth-configured chromium
     const chromium = configureStealthBrowser();
@@ -53,7 +55,7 @@ export class BrowserDriver {
     ];
 
     this.context = await chromium.launchPersistentContext(
-      this.config.profileDir,
+      profileDir,
       {
         headless: false, // Hardcoded: Google detects headless mode
         args: launchArgs,
@@ -85,6 +87,7 @@ export class BrowserDriver {
       await this.context.close();
       this.context = null;
     }
+    this.profileManager.releaseLock();
   }
 
   /**
