@@ -5,10 +5,6 @@ import { join } from "node:path";
 import { jobManager } from "../jobs/job-manager.js";
 import type { ToolResult } from "../jobs/types.js";
 
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 export function registerMswExecute(server: McpServer): void {
   server.tool(
     "msw_execute",
@@ -17,8 +13,10 @@ export function registerMswExecute(server: McpServer): void {
       projectDir: z.string().describe("Project directory with .msw/ config"),
       taskDescription: z.string().describe("What to implement"),
       maxIterations: z.number().optional().default(5).describe("Maximum Ralph loop iterations"),
+      completionPromise: z.string().optional().default("TASK_COMPLETE").describe("String that signals completion"),
+      verifyCommands: z.array(z.string()).optional().default([]).describe("Commands to run for verification"),
     },
-    async ({ projectDir, taskDescription, maxIterations }): Promise<ToolResult> => {
+    async ({ projectDir, taskDescription, maxIterations, completionPromise, verifyCommands }): Promise<ToolResult> => {
       const mswDir = join(projectDir, ".msw");
 
       try {
@@ -41,37 +39,110 @@ export function registerMswExecute(server: McpServer): void {
           const executionDir = join(mswDir, "execution");
           await mkdir(executionDir, { recursive: true });
 
+          // Try to wire real Ralph loop engines
+          let useRealEngines = false;
+          let tracker: import("../../execution/iteration-tracker.js").IterationTracker | null = null;
+          let completionDetector: import("../../execution/completion-detector.js").CompletionDetector | null = null;
+
+          try {
+            const { IterationTracker } = await import("../../execution/iteration-tracker.js");
+            const { CompletionDetector } = await import("../../execution/completion-detector.js");
+
+            tracker = new IterationTracker(projectDir);
+            tracker.init({
+              prompt: taskDescription,
+              completionPromise: completionPromise ?? "TASK_COMPLETE",
+              maxIterations: iterations,
+              taskContext: {
+                phase: "execute",
+                planId: job.id,
+                description: taskDescription,
+              },
+            });
+
+            completionDetector = new CompletionDetector(completionPromise ?? "TASK_COMPLETE");
+            useRealEngines = true;
+          } catch {
+            // Engines not available -- fall back to stub iteration
+          }
+
           const logs: string[] = [];
+          const transcriptPath = join(executionDir, "transcript.md");
 
           for (let i = 1; i <= iterations; i++) {
             jobManager.update(job.id, {
               progress: {
                 step: i,
                 total: iterations,
-                message: `Ralph loop iteration ${i}/${iterations}`,
+                message: `Ralph loop iteration ${i}/${iterations}${useRealEngines ? "" : " (stub)"}`,
               },
             });
 
-            // Stub: simulate iteration work (Phase 5 will add real Ralph loop)
-            const iterationLog = [
-              `# Iteration ${i}`,
-              `Timestamp: ${new Date().toISOString()}`,
-              `Task: ${taskDescription}`,
-              `Status: stub iteration (pending Phase 5 engine integration)`,
-              "",
-            ].join("\n");
+            if (useRealEngines && tracker) {
+              // Real Ralph loop: increment tracker, check completion
+              const iterResult = tracker.increment();
 
-            logs.push(iterationLog);
+              const iterationLog = [
+                `# Iteration ${i}`,
+                `Timestamp: ${new Date().toISOString()}`,
+                `Task: ${taskDescription}`,
+                `Status: ${iterResult}`,
+                "",
+              ].join("\n");
 
-            await writeFile(
-              join(executionDir, `iteration-${i}.md`),
-              iterationLog,
-              "utf-8",
-            );
+              logs.push(iterationLog);
+              await writeFile(join(executionDir, `iteration-${i}.md`), iterationLog, "utf-8");
 
-            // Small delay between iterations to simulate work
-            if (i < iterations) {
-              await delay(100);
+              // Append to transcript for completion detection
+              await writeFile(transcriptPath, logs.join("\n---\n"), "utf-8");
+
+              // Check completion via CompletionDetector
+              if (completionDetector && (verifyCommands ?? []).length > 0) {
+                const check = completionDetector.checkWithVerification(
+                  transcriptPath,
+                  verifyCommands ?? [],
+                );
+                if (check.complete) {
+                  jobManager.update(job.id, {
+                    status: "completed",
+                    progress: { step: i, total: iterations, message: "Completion detected" },
+                    result: {
+                      iterationsRun: i,
+                      taskDescription,
+                      executionDir,
+                      completedEarly: true,
+                      verifyResults: check.verifyResults,
+                    },
+                  });
+                  return;
+                }
+              }
+
+              if (iterResult !== "continue") {
+                jobManager.update(job.id, {
+                  status: "completed",
+                  progress: { step: i, total: iterations, message: `Stopped: ${iterResult}` },
+                  result: {
+                    iterationsRun: i,
+                    taskDescription,
+                    executionDir,
+                    stoppedReason: iterResult,
+                  },
+                });
+                return;
+              }
+            } else {
+              // Stub iteration
+              const iterationLog = [
+                `# Iteration ${i}`,
+                `Timestamp: ${new Date().toISOString()}`,
+                `Task: ${taskDescription}`,
+                `Status: stub iteration (execution engines not available)`,
+                "",
+              ].join("\n");
+
+              logs.push(iterationLog);
+              await writeFile(join(executionDir, `iteration-${i}.md`), iterationLog, "utf-8");
             }
           }
 
@@ -86,6 +157,7 @@ export function registerMswExecute(server: McpServer): void {
               iterationsRun: iterations,
               taskDescription,
               executionDir,
+              realEngines: useRealEngines,
             },
           });
         } catch (err) {

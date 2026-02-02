@@ -1,6 +1,7 @@
 import { z } from "zod/v4";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { existsSync, readFileSync } from "node:fs";
+import { writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { jobManager } from "../jobs/job-manager.js";
 import type { Job } from "../jobs/types.js";
@@ -12,56 +13,155 @@ interface MswConfig {
 
 /**
  * Run the research job in the background.
- * Updates job status through queued -> running -> completed/failed.
+ * Launches browser, navigates to NotebookLM, runs TopicExpansionEngine,
+ * persists results via ReportCompiler.
  */
 async function runResearchJob(
   jobId: string,
   projectDir: string,
   topic: string,
+  notebookUrl: string | undefined,
   options: { maxQueries: number; relevanceThreshold: number },
 ): Promise<void> {
   jobManager.update(jobId, { status: "running" });
 
   try {
-    // Attempt dynamic import of the auto-conversation engine
+    // Dynamic imports to allow graceful degradation
+    const { BrowserDriver } = await import("../../browser/driver.js");
+    const { NotebookNavigator } = await import(
+      "../../notebooklm/navigator.js"
+    );
     const { TopicExpansionEngine } = await import(
       "../../auto-conversation/index.js"
     );
+    const { ReportCompiler } = await import(
+      "../../knowledge/report-compiler.js"
+    );
 
-    // The engine requires a Playwright page — for now we record that
-    // full browser orchestration is needed. This stub demonstrates
-    // the integration point; a real invocation would:
-    //   1. Launch browser via BrowserDriver
-    //   2. Navigate to NotebookLM
-    //   3. Pass the page to TopicExpansionEngine
-    //
-    // Until the full pipeline is wired, report success with metadata.
-    jobManager.update(jobId, {
-      status: "completed",
-      result: {
-        topic,
-        maxQueries: options.maxQueries,
-        relevanceThreshold: options.relevanceThreshold,
-        message:
-          "Engine module loaded successfully. Full browser orchestration " +
-          "pipeline required for live research. Wire BrowserDriver -> " +
-          "NotebookLM navigator -> TopicExpansionEngine to enable.",
-        engineAvailable: true,
-      },
-    });
+    if (!notebookUrl) {
+      jobManager.update(jobId, {
+        status: "failed",
+        error:
+          "No notebookUrls configured in .msw/config.json. Add at least one URL.",
+      });
+      return;
+    }
+
+    const driver = new BrowserDriver();
+
+    try {
+      // 1. Launch browser
+      jobManager.update(jobId, {
+        progress: { step: 1, total: 5, message: "Launching browser" },
+      });
+      await driver.launch();
+      const page = await driver.getPage();
+
+      // 2. Navigate to NotebookLM
+      jobManager.update(jobId, {
+        progress: {
+          step: 2,
+          total: 5,
+          message: `Navigating to ${notebookUrl}`,
+        },
+      });
+      const navigator = new NotebookNavigator(page);
+      await navigator.connect(notebookUrl);
+
+      // 3. Run TopicExpansionEngine
+      jobManager.update(jobId, {
+        progress: {
+          step: 3,
+          total: 5,
+          message: `Running topic expansion (max ${options.maxQueries} queries)`,
+        },
+      });
+
+      const engine = new TopicExpansionEngine({
+        page,
+        config: {
+          taskGoal: topic,
+          currentError: null,
+          threshold: options.relevanceThreshold,
+          maxLevel: 3,
+          maxQueries: options.maxQueries,
+          model: "llama3",
+        },
+      });
+      await engine.initialize();
+      const result = await engine.run();
+
+      // 4. Persist results via ReportCompiler
+      jobManager.update(jobId, {
+        progress: { step: 4, total: 5, message: "Persisting research results" },
+      });
+
+      const compiler = new ReportCompiler();
+      const sessionId = `research-${Date.now()}`;
+      const now = new Date();
+
+      // Convert expansion responses to QAPair format
+      const pairs: Array<{
+        question: string;
+        answer: string;
+        timestamp: Date;
+        source: "auto-expansion";
+      }> = [];
+      for (const [q, a] of result.responses) {
+        pairs.push({
+          question: q,
+          answer: a,
+          timestamp: now,
+          source: "auto-expansion",
+        });
+      }
+
+      const report = {
+        sessionId,
+        notebook: notebookUrl,
+        taskGoal: topic,
+        pairs,
+        startTime: now,
+        endTime: new Date(),
+      };
+
+      const markdown = compiler.compile(report);
+      const reportPath = compiler.getFilePath(sessionId, projectDir);
+      const reportDir = join(projectDir, ".msw", "research", "sessions");
+      mkdirSync(reportDir, { recursive: true });
+      writeFileSync(reportPath, markdown, "utf-8");
+
+      // 5. Complete
+      jobManager.update(jobId, {
+        status: "completed",
+        progress: { step: 5, total: 5, message: "Research complete" },
+        result: {
+          topic,
+          topicsExpanded: result.topicsExpanded,
+          queriesUsed: result.queriesUsed,
+          qaPairsExtracted: pairs.length,
+          reportPath,
+          engineAvailable: true,
+        },
+      });
+    } finally {
+      await driver.close();
+    }
   } catch (err: unknown) {
-    // Auto-conversation engine not available at runtime
     const message =
       err instanceof Error ? err.message : "Unknown import error";
 
-    if (message.includes("Cannot find module") || message.includes("ERR_MODULE_NOT_FOUND")) {
+    if (
+      message.includes("Cannot find module") ||
+      message.includes("ERR_MODULE_NOT_FOUND")
+    ) {
       jobManager.update(jobId, {
         status: "completed",
         result: {
           topic,
           message:
-            "Auto-conversation engine not yet available. " +
-            "Complete Phase 2 (auto-conversation) build to enable live research.",
+            "Engine modules not yet available at runtime. " +
+            "Ensure browser, auto-conversation, and knowledge modules are built.",
           engineAvailable: false,
         },
       });
@@ -135,9 +235,10 @@ export function registerMswResearch(server: McpServer): void {
 
       // Create job and return immediately
       const job: Job = jobManager.create("msw_research");
+      const notebookUrl = config.notebookUrls?.[0];
 
       // Fire-and-forget the research job
-      void runResearchJob(job.id, projectDir, topic, {
+      void runResearchJob(job.id, projectDir, topic, notebookUrl, {
         maxQueries,
         relevanceThreshold,
       });
