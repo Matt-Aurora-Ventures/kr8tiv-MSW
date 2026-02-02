@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { PipelineOrchestrator } from "../../pipeline/orchestrator.js";
 
 export function registerMswInit(server: McpServer): void {
   server.tool(
@@ -23,12 +24,21 @@ export function registerMswInit(server: McpServer): void {
 
         const config = {
           initialized: new Date().toISOString(),
+          notebookUrl: notebookUrls?.[0] ?? "",
           notebookUrls: notebookUrls ?? [],
           version: "0.1.0",
         };
 
         const configPath = path.join(mswDir, "config.json");
         fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+
+        // Run pipeline orchestrator for health checks and crash recovery
+        const orchestrator = new PipelineOrchestrator(projectDir);
+        const initResult = await orchestrator.initialize();
+
+        if (initResult.resumed) {
+          console.error("[msw] Resuming from previous session checkpoint");
+        }
 
         return {
           content: [
@@ -39,6 +49,12 @@ export function registerMswInit(server: McpServer): void {
                 projectDir,
                 configPath,
                 config,
+                health: initResult.health,
+                degraded: orchestrator.getDegradedCapabilities(),
+                resumed: initResult.resumed,
+                ...(initResult.resumed
+                  ? { resumedPhase: initResult.state.phase }
+                  : {}),
               }),
             },
           ],
