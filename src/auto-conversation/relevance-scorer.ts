@@ -39,7 +39,7 @@ export class RelevanceScorer {
   private readonly model: string;
 
   constructor(config: RelevanceScorerConfig = {}) {
-    this.model = config.model ?? 'qwen2.5:1.5b';
+    this.model = config.model ?? 'qwen3-coder:latest';
   }
 
   /**
