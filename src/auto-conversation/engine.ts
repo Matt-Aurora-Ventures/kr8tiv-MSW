@@ -27,14 +27,14 @@ export class TopicExpansionEngine {
   constructor({ page, config }: { page: Page; config: ExpansionConfig }) {
     this.config = config;
     this.detector = new TopicDetector(page);
-    this.scorer = new RelevanceScorer({ model: config.model });
+    this.scorer = new RelevanceScorer();
     this.budget = new BudgetTracker({ dailyLimit: config.maxQueries });
     this.clicker = new TopicClicker(page);
     this.state = new ExpansionState(config);
   }
 
   /**
-   * Initialize the engine: verify Ollama connectivity and warm the model.
+   * Initialize the engine: set up the relevance scorer and browser.
    */
   async initialize(): Promise<void> {
     await this.scorer.initialize();

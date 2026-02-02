@@ -1,93 +1,31 @@
 /**
- * RelevanceScorer — Uses a local Ollama LLM to score candidate topics
- * for relevance before clicking them. Prevents wasting queries on
- * low-value topics.
+ * RelevanceScorer — Uses lightweight string-similarity scoring to filter
+ * candidate topics. The host LLM (running in the IDE) handles intelligent
+ * topic selection; this provides a fast default filter.
  */
 
-import ollama from 'ollama';
-import { z } from 'zod';
+import stringSimilarity from 'string-similarity';
 import type { ScoredTopic } from './types.js';
 
-const RelevanceScoreSchema = z.object({
-  taskRelevance: z.number().min(0).max(40),
-  errorRelevance: z.number().min(0).max(30),
-  implementationValue: z.number().min(0).max(20),
-  novelty: z.number().min(0).max(10),
-  total: z.number().min(0).max(100),
-  reasoning: z.string(),
-});
-
-/** JSON Schema for structured Ollama output */
-const RELEVANCE_JSON_SCHEMA = {
-  type: 'object' as const,
-  properties: {
-    taskRelevance: { type: 'number' as const, minimum: 0, maximum: 40 },
-    errorRelevance: { type: 'number' as const, minimum: 0, maximum: 30 },
-    implementationValue: { type: 'number' as const, minimum: 0, maximum: 20 },
-    novelty: { type: 'number' as const, minimum: 0, maximum: 10 },
-    total: { type: 'number' as const, minimum: 0, maximum: 100 },
-    reasoning: { type: 'string' as const },
-  },
-  required: ['taskRelevance', 'errorRelevance', 'implementationValue', 'novelty', 'total', 'reasoning'],
-};
-
 export interface RelevanceScorerConfig {
-  model?: string;
+  // No config needed — scoring is purely local
 }
 
 export class RelevanceScorer {
-  private readonly model: string;
-
-  constructor(config: RelevanceScorerConfig = {}) {
-    this.model = config.model ?? 'qwen3-coder:latest';
+  constructor(_config: RelevanceScorerConfig = {}) {
+    // No-op
   }
 
   /**
-   * Initialize the scorer: verify Ollama is running, model is available,
-   * and warm up the model to avoid cold-start latency.
+   * Initialize the scorer. No-op — no external services needed.
    */
   async initialize(): Promise<void> {
-    // 1. Check Ollama is running
-    let models: Awaited<ReturnType<typeof ollama.list>>;
-    try {
-      models = await ollama.list();
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      if (message.includes('ECONNREFUSED') || message.includes('fetch failed')) {
-        throw new Error(
-          'Ollama is not running. Start with `ollama serve`'
-        );
-      }
-      throw new Error(`Failed to connect to Ollama: ${message}`);
-    }
-
-    // 2. Check model availability
-    const available = models.models.map((m) => m.name);
-    const found = available.some(
-      (name) => name === this.model || name.startsWith(`${this.model}:`)
-    );
-    if (!found) {
-      throw new Error(
-        `Model ${this.model} not found. Pull with \`ollama pull ${this.model}\``
-      );
-    }
-
-    // 3. Warm up model
-    try {
-      await ollama.chat({
-        model: this.model,
-        messages: [{ role: 'user', content: 'Reply with {}' }],
-        format: 'json',
-      });
-    } catch {
-      // Warm-up failure is non-fatal
-    }
-
-    console.log('Relevance model ready');
+    // No model to warm up
   }
 
   /**
-   * Score a candidate topic for relevance to the current task.
+   * Score a candidate topic for relevance to the current task using
+   * string similarity between the topic and task/error context.
    */
   async score(
     candidateTopic: string,
@@ -95,94 +33,58 @@ export class RelevanceScorer {
     currentError: string | null,
     previousTopics: string[]
   ): Promise<ScoredTopic> {
-    const prompt = this.buildPrompt(
-      candidateTopic,
-      taskGoal,
-      currentError,
-      previousTopics
-    );
+    const topicLower = candidateTopic.toLowerCase();
+    const goalLower = taskGoal.toLowerCase();
 
-    try {
-      const response = await ollama.chat({
-        model: this.model,
-        messages: [{ role: 'user', content: prompt }],
-        format: RELEVANCE_JSON_SCHEMA as Record<string, unknown>,
-      });
+    // Task relevance (0-40): similarity to goal
+    const goalSim = stringSimilarity.compareTwoStrings(topicLower, goalLower);
+    const taskRelevance = Math.round(goalSim * 40);
 
-      const parsed = RelevanceScoreSchema.parse(
-        JSON.parse(response.message.content)
-      );
-
-      return {
-        text: candidateTopic,
-        level: 0,
-        parentTopic: null,
-        score: parsed.total,
-        reasoning: parsed.reasoning,
-        dimensions: {
-          taskRelevance: parsed.taskRelevance,
-          errorRelevance: parsed.errorRelevance,
-          implementationValue: parsed.implementationValue,
-          novelty: parsed.novelty,
-        },
-      };
-    } catch {
-      return {
-        text: candidateTopic,
-        level: 0,
-        parentTopic: null,
-        score: 0,
-        reasoning: 'Failed to parse LLM response',
-        dimensions: {
-          taskRelevance: 0,
-          errorRelevance: 0,
-          implementationValue: 0,
-          novelty: 0,
-        },
-      };
+    // Error relevance (0-30): similarity to current error
+    let errorRelevance = 0;
+    if (currentError) {
+      const errorLower = currentError.toLowerCase();
+      const errorSim = stringSimilarity.compareTwoStrings(topicLower, errorLower);
+      errorRelevance = Math.round(errorSim * 30);
     }
+
+    // Implementation value (0-20): bonus for implementation-related keywords
+    const implKeywords = ['how to', 'implement', 'setup', 'configure', 'install', 'fix', 'debug', 'example', 'tutorial', 'guide', 'code', 'api', 'function', 'method'];
+    const implMatches = implKeywords.filter((kw) => topicLower.includes(kw)).length;
+    const implementationValue = Math.min(20, implMatches * 5);
+
+    // Novelty (0-10): penalize if similar to previously explored topics
+    let novelty = 10;
+    if (previousTopics.length > 0) {
+      const bestMatch = stringSimilarity.findBestMatch(
+        topicLower,
+        previousTopics.map((t) => t.toLowerCase())
+      );
+      // High similarity to previous = low novelty
+      novelty = Math.round((1 - bestMatch.bestMatch.rating) * 10);
+    }
+
+    const total = taskRelevance + errorRelevance + implementationValue + novelty;
+
+    return {
+      text: candidateTopic,
+      level: 0,
+      parentTopic: null,
+      score: total,
+      reasoning: `String-similarity scoring: goal=${taskRelevance}, error=${errorRelevance}, impl=${implementationValue}, novelty=${novelty}`,
+      dimensions: {
+        taskRelevance,
+        errorRelevance,
+        implementationValue,
+        novelty,
+      },
+    };
   }
 
   /**
-   * Dispose of resources. No-op for now — Ollama manages its own lifecycle.
+   * Dispose of resources. No-op — no external services to clean up.
    */
   async dispose(): Promise<void> {
     // No-op
-  }
-
-  private buildPrompt(
-    candidateTopic: string,
-    taskGoal: string,
-    currentError: string | null,
-    previousTopics: string[]
-  ): string {
-    const previousList =
-      previousTopics.length > 0
-        ? `Previously explored topics:\n${previousTopics.map((t) => `- ${t}`).join('\n')}`
-        : 'No previous topics explored yet.';
-
-    const errorContext = currentError
-      ? `Current error to solve:\n${currentError}`
-      : 'No specific error — general exploration.';
-
-    return `You are a relevance scorer for an AI coding assistant. Score how relevant a candidate topic is for the current task.
-
-Task goal: ${taskGoal}
-
-${errorContext}
-
-${previousList}
-
-Candidate topic to score: "${candidateTopic}"
-
-Score on these dimensions:
-- taskRelevance (0-40): How directly relevant is this topic to the task goal?
-- errorRelevance (0-30): How likely is this topic to help resolve the current error?
-- implementationValue (0-20): How much actionable implementation guidance might this provide?
-- novelty (0-10): How much new information does this add vs previously explored topics?
-- total (0-100): Sum of all dimensions.
-- reasoning: Brief explanation of the score.
-
-Respond with JSON only.`;
   }
 }

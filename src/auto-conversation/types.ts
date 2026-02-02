@@ -25,7 +25,6 @@ export interface ExpansionConfig {
   threshold: number;
   maxLevel: number;
   maxQueries: number;
-  model: string;
 }
 
 export interface ExpansionResult {

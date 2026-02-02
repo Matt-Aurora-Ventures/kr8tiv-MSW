@@ -85,7 +85,6 @@ async function runResearchJob(
           threshold: options.relevanceThreshold,
           maxLevel: 3,
           maxQueries: options.maxQueries,
-          model: "llama3",
         },
       });
       await engine.initialize();
