@@ -40,12 +40,22 @@ Zero manual copy-paste between NotebookLM and coding agents — when an agent hi
 - [ ] Self-healing diagnostics that auto-fix common issues
 - [ ] Multi-notebook support for switching between knowledge bases
 
-### Out of Scope
+### Out of Scope (v1.0)
 
 - Web UI for notebook management — CLI/MCP first
 - Multi-notebook simultaneous routing — single notebook per session for v1
 - Custom relevance models — use local LLM scoring initially
 - Non-MCP integration (CLI-only mode) — MCP compatibility is primary constraint
+- **Custom NotebookLM alternative — deferred to v2.0** (RAG system with vector DB as NotebookLM replacement)
+
+### Future Milestones
+
+**v2.0 Vision: Custom RAG Backend**
+- Build MSW's own NotebookLM alternative using RAG architecture
+- Remove dependency on Google's NotebookLM (eliminates bot detection, rate limits, UI brittleness)
+- Components: Document parser, vector database (Pinecone/Weaviate/Chroma), embeddings (OpenAI/local), chat interface
+- Maintain MCP compatibility with same tool interface
+- Support both NotebookLM (v1.0) and custom RAG (v2.0) backends via configuration
 
 ## Context
 
