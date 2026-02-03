@@ -9,12 +9,12 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Browser Automation
 
-- [ ] **BROW-01**: Persistent Chrome profile maintains NotebookLM authentication across sessions
-- [ ] **BROW-02**: Playwright driver navigates to NotebookLM and connects to specified notebook
-- [ ] **BROW-03**: Humanized automation with stealth mode and human-like typing/click delays
-- [ ] **BROW-04**: Bot detection mitigation via dedicated automation account strategy
-- [ ] **BROW-05**: Resilient selector layer using accessibility tree and semantic selectors
-- [ ] **BROW-06**: Response extraction waits for streaming completion before parsing
+- [x] **BROW-01**: Persistent Chrome profile maintains NotebookLM authentication across sessions
+- [x] **BROW-02**: Playwright driver navigates to NotebookLM and connects to specified notebook
+- [x] **BROW-03**: Humanized automation with stealth mode and human-like typing/click delays
+- [x] **BROW-04**: Bot detection mitigation via dedicated automation account strategy
+- [x] **BROW-05**: Resilient selector layer using accessibility tree and semantic selectors
+- [x] **BROW-06**: Response extraction waits for streaming completion before parsing
 
 ### Auto-Conversation Engine
 
@@ -153,12 +153,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BROW-01 | Phase 1 | Pending |
-| BROW-02 | Phase 1 | Pending |
-| BROW-03 | Phase 1 | Pending |
-| BROW-04 | Phase 1 | Pending |
-| BROW-05 | Phase 1 | Pending |
-| BROW-06 | Phase 1 | Pending |
+| BROW-01 | Phase 1 | Complete |
+| BROW-02 | Phase 1 | Complete |
+| BROW-03 | Phase 1 | Complete |
+| BROW-04 | Phase 1 | Complete |
+| BROW-05 | Phase 1 | Complete |
+| BROW-06 | Phase 1 | Complete |
 | AUTO-01 | Phase 2 | Pending |
 | AUTO-02 | Phase 2 | Pending |
 | AUTO-03 | Phase 2 | Pending |
