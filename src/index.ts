@@ -4,6 +4,9 @@ export * from './browser/index.js';
 // NotebookLM interaction
 export * from './notebooklm/index.js';
 
+// Browser types
+export * from './types/browser.js';
+
 // Auto-conversation engine
 export * from './auto-conversation/index.js';
 
