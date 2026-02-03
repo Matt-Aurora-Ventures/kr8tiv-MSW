@@ -1,0 +1,281 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ReportCompiler snapshots > compiles complex real-world report 1`] = `
+"---
+sessionId: session-2026-02-03-001
+notebook: msw-protocol-v0.1.0
+taskGoal: Research MSW testing architecture for Phase 7
+queryCount: 4
+startTime: '2026-02-03T08:00:00.000Z'
+endTime: '2026-02-03T08:45:00.000Z'
+sources:
+  - auto-expansion
+  - manual
+---
+## Q1: What testing frameworks does MSW use?
+
+> Source: auto-expansion | Relevance: 0.98 | Timestamp: 2026-02-03T08:05:00.000Z
+
+MSW Protocol uses Vitest as the primary testing framework, with Playwright for E2E tests. Coverage is tracked with @vitest/coverage-v8.
+
+**Citations:** testing.md, package.json
+
+## Q2: What are the coverage thresholds?
+
+> Source: auto-expansion | Relevance: 0.95 | Timestamp: 2026-02-03T08:15:00.000Z
+
+Global thresholds: 70% lines/functions, 65% branches. Critical paths (auth, backup, config, degradation, browser driver, MCP tools) require 80%+ lines/functions.
+
+**Citations:** vitest.config.ts, testing.md
+
+## Q3: How are snapshot tests implemented?
+
+> Source: manual | Relevance: 0.92 | Timestamp: 2026-02-03T08:25:00.000Z
+
+Snapshot tests use Vitest's built-in \`toMatchSnapshot()\` matcher. Snapshots validate output stability for response parsing and report compilation.
+
+**Citations:** testing.md
+
+## Q4: What is the CI/CD setup?
+
+> Source: auto-expansion | Relevance: 0.88 | Timestamp: 2026-02-03T08:35:00.000Z
+
+GitHub Actions runs tests on Node 18, 20, 22. Coverage is uploaded to Codecov, and PR comments show coverage diffs.
+
+**Citations:** .github/workflows/test.yml
+"
+`;
+
+exports[`ReportCompiler snapshots > compiles multiple Q&A pairs with metadata 1`] = `
+"---
+sessionId: test-session-002
+notebook: msw-protocol
+taskGoal: Understand MSW architecture
+queryCount: 3
+startTime: '2026-02-03T10:00:00.000Z'
+endTime: '2026-02-03T10:15:00.000Z'
+sources:
+  - auto-expansion
+  - error-bridge
+---
+## Q1: How does authentication work?
+
+> Source: auto-expansion | Timestamp: 2026-02-03T10:02:00.000Z
+
+Uses persistent Chrome profiles.
+
+**Citations:** auth.md
+
+## Q2: How does error handling work?
+
+> Source: error-bridge | Timestamp: 2026-02-03T10:07:00.000Z
+
+Errors trigger NotebookLM queries for guidance.
+
+**Citations:** error-handling.md
+
+## Q3: How does testing work?
+
+> Source: auto-expansion | Relevance: 0.95 | Timestamp: 2026-02-03T10:12:00.000Z
+
+Three-tier testing: unit, integration, E2E.
+
+**Citations:** testing.md
+"
+`;
+
+exports[`ReportCompiler snapshots > compiles report with all source types 1`] = `
+"---
+sessionId: test-session-003
+notebook: msw-protocol
+taskGoal: Test all source types
+queryCount: 3
+startTime: '2026-02-03T10:00:00.000Z'
+endTime: '2026-02-03T10:10:00.000Z'
+sources:
+  - auto-expansion
+  - error-bridge
+  - manual
+---
+## Q1: Auto-expansion question?
+
+> Source: auto-expansion | Timestamp: 2026-02-03T10:02:00.000Z
+
+Auto-expansion answer
+
+**Citations:** doc1.md
+
+## Q2: Error-bridge question?
+
+> Source: error-bridge | Timestamp: 2026-02-03T10:05:00.000Z
+
+Error-bridge answer
+
+**Citations:** doc2.md
+
+## Q3: Manual question?
+
+> Source: manual | Timestamp: 2026-02-03T10:08:00.000Z
+
+Manual answer
+
+**Citations:** doc3.md
+"
+`;
+
+exports[`ReportCompiler snapshots > compiles single Q&A pair to markdown 1`] = `
+"---
+sessionId: test-session-001
+notebook: msw-protocol
+taskGoal: Test authentication patterns
+queryCount: 1
+startTime: '2026-02-03T10:00:00.000Z'
+endTime: '2026-02-03T10:05:00.000Z'
+sources:
+  - auto-expansion
+---
+## Q1: How does authentication work?
+
+> Source: auto-expansion | Timestamp: 2026-02-03T10:02:00.000Z
+
+MSW uses persistent Chrome profiles to maintain Google session cookies.
+
+**Citations:** auth.md, browser.md
+"
+`;
+
+exports[`ReportCompiler snapshots > deduplicates sources in frontmatter 1`] = `
+"---
+sessionId: test-session-008
+notebook: msw-protocol
+taskGoal: Test source deduplication
+queryCount: 3
+startTime: '2026-02-03T10:00:00.000Z'
+endTime: '2026-02-03T10:10:00.000Z'
+sources:
+  - auto-expansion
+  - manual
+---
+## Q1: Q1
+
+> Source: auto-expansion | Timestamp: 2026-02-03T10:02:00.000Z
+
+A1
+
+**Citations:** doc.md
+
+## Q2: Q2
+
+> Source: auto-expansion | Timestamp: 2026-02-03T10:05:00.000Z
+
+A2
+
+**Citations:** doc.md
+
+## Q3: Q3
+
+> Source: manual | Timestamp: 2026-02-03T10:08:00.000Z
+
+A3
+
+**Citations:** doc.md
+"
+`;
+
+exports[`ReportCompiler snapshots > formats timestamps in ISO format 1`] = `
+"---
+sessionId: test-session-005
+notebook: msw-protocol
+taskGoal: Test timestamp formatting
+queryCount: 1
+startTime: '2026-02-03T14:30:45.000Z'
+endTime: '2026-02-03T14:35:50.000Z'
+sources:
+  - auto-expansion
+---
+## Q1: Test question
+
+> Source: auto-expansion | Timestamp: 2026-02-03T14:32:15.000Z
+
+Test answer
+
+**Citations:** test.md
+"
+`;
+
+exports[`ReportCompiler snapshots > generates correct file path for session 1`] = `"\\home\\user\\projects\\msw\\.msw\\research\\sessions\\test-session-010.md"`;
+
+exports[`ReportCompiler snapshots > handles Q&A pairs with no citations 1`] = `
+"---
+sessionId: test-session-004
+notebook: msw-protocol
+taskGoal: Test no citations
+queryCount: 1
+startTime: '2026-02-03T10:00:00.000Z'
+endTime: '2026-02-03T10:05:00.000Z'
+sources:
+  - manual
+---
+## Q1: General question
+
+> Source: manual | Timestamp: 2026-02-03T10:02:00.000Z
+
+General answer without specific sources
+"
+`;
+
+exports[`ReportCompiler snapshots > handles empty pairs array 1`] = `
+"---
+sessionId: test-session-007
+notebook: msw-protocol
+taskGoal: Test empty report
+queryCount: 0
+startTime: '2026-02-03T10:00:00.000Z'
+endTime: '2026-02-03T10:00:01.000Z'
+sources: []
+---
+
+"
+`;
+
+exports[`ReportCompiler snapshots > handles markdown special characters in answers 1`] = `
+"---
+sessionId: test-session-006
+notebook: msw-protocol
+taskGoal: Test markdown escaping
+queryCount: 1
+startTime: '2026-02-03T10:00:00.000Z'
+endTime: '2026-02-03T10:05:00.000Z'
+sources:
+  - auto-expansion
+---
+## Q1: How to use # and * in code?
+
+> Source: auto-expansion | Timestamp: 2026-02-03T10:02:00.000Z
+
+Use \`#hashtag\` and \`*asterisk*\` in markdown code blocks. Headers use ## syntax.
+
+**Citations:** markdown.md
+"
+`;
+
+exports[`ReportCompiler snapshots > uses compileReport function directly 1`] = `
+"---
+sessionId: test-session-009
+notebook: msw-protocol
+taskGoal: Test direct function call
+queryCount: 1
+startTime: '2026-02-03T10:00:00.000Z'
+endTime: '2026-02-03T10:05:00.000Z'
+sources:
+  - manual
+---
+## Q1: Direct function test?
+
+> Source: manual | Timestamp: 2026-02-03T10:02:00.000Z
+
+Testing compileReport function
+
+**Citations:** test.md
+"
+`;
