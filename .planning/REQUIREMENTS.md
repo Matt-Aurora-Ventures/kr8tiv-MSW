@@ -72,6 +72,51 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **RALPH-05**: Completion detection checks for success criteria before stopping
 - [ ] **RALPH-06**: Behavioral verification validates actual functionality, not just structure
 
+### Automated Testing
+
+- [ ] **TEST-01**: Unit test infrastructure using Vitest with coverage reporting
+- [ ] **TEST-02**: Auth module tests cover token validation, session persistence, logout detection
+- [ ] **TEST-03**: Backup module tests cover state serialization, restoration, corruption recovery
+- [ ] **TEST-04**: Config module tests cover validation, schema enforcement, defaults handling
+- [ ] **TEST-05**: Degradation module tests cover offline mode, cache behavior, recovery
+- [ ] **TEST-06**: Integration tests for authentication flow (login, persist, restore)
+- [ ] **TEST-07**: Integration tests for backup-restore flow (save, corrupt, recover)
+- [ ] **TEST-08**: E2E test for full NotebookLM upload workflow (init, query, extract, commit)
+- [ ] **TEST-09**: E2E test for error-to-resolution pipeline (error detection, NotebookLM query, fix injection)
+- [ ] **TEST-10**: Test coverage reporting with 80%+ critical path coverage target
+- [ ] **TEST-11**: Snapshot testing for response parsing and markdown compilation
+- [ ] **TEST-12**: Mock NotebookLM UI for deterministic selector testing
+
+### CI/CD Pipeline
+
+- [ ] **CI-01**: GitHub Actions workflow runs tests on every commit
+- [ ] **CI-02**: Multi-Node version testing matrix (Node 18, 20, 22)
+- [ ] **CI-03**: TypeScript type checking in CI pipeline
+- [ ] **CI-04**: Linting enforcement (ESLint + Prettier) on every PR
+- [ ] **CI-05**: Build verification ensures distribution artifacts are valid
+- [ ] **CI-06**: E2E health check runs against live NotebookLM sandbox account
+- [ ] **CI-07**: Automated validation rejects PRs that break critical tests
+- [ ] **CI-08**: Coverage regression detection (fail if coverage drops below threshold)
+- [ ] **CI-09**: Security scanning for dependency vulnerabilities
+- [ ] **CI-10**: Automated release tagging and changelog generation
+
+### Production Hardening
+
+- [ ] **HARD-01**: Structured logging via Pino to `.msw/logs/` with rotation
+- [ ] **HARD-02**: Log levels configurable (debug, info, warn, error) with environment variable
+- [ ] **HARD-03**: Rate limiting handler tracks NotebookLM requests and warns before quota
+- [ ] **HARD-04**: Rate limit dashboard shows current usage, remaining quota, reset time
+- [ ] **HARD-05**: Interactive demo mode for new users with guided workflow
+- [ ] **HARD-06**: Demo mode uses sample notebook with safe fallback if unavailable
+- [ ] **HARD-07**: Self-healing diagnostics detect common issues (Chrome profile lock, selector failures)
+- [ ] **HARD-08**: Auto-fix common issues (unlock Chrome profile, refresh selectors, restart browser)
+- [ ] **HARD-09**: Performance metrics tracking (query timing, response time, cache hit rate)
+- [ ] **HARD-10**: Metrics export to JSON for analysis and monitoring
+- [ ] **HARD-11**: Session management dashboard shows active operations, progress, cancel option
+- [ ] **HARD-12**: Session persistence across crashes with resumption support
+- [ ] **HARD-13**: Graceful degradation when NotebookLM is unavailable (use cached responses)
+- [ ] **HARD-14**: Health check endpoint exposes system status (browser ready, notebook connected, quota remaining)
+
 ## v2 Requirements
 
 Deferred to future release. Tracked but not in current roadmap.
@@ -152,13 +197,50 @@ Which phases cover which requirements. Updated during roadmap creation.
 | RALPH-04 | Phase 5 | Pending |
 | RALPH-05 | Phase 5 | Pending |
 | RALPH-06 | Phase 5 | Pending |
+| TEST-01 | Phase 7 | Pending |
+| TEST-02 | Phase 7 | Pending |
+| TEST-03 | Phase 7 | Pending |
+| TEST-04 | Phase 7 | Pending |
+| TEST-05 | Phase 7 | Pending |
+| TEST-06 | Phase 7 | Pending |
+| TEST-07 | Phase 7 | Pending |
+| TEST-08 | Phase 7 | Pending |
+| TEST-09 | Phase 7 | Pending |
+| TEST-10 | Phase 7 | Pending |
+| TEST-11 | Phase 7 | Pending |
+| TEST-12 | Phase 7 | Pending |
+| CI-01 | Phase 8 | Pending |
+| CI-02 | Phase 8 | Pending |
+| CI-03 | Phase 8 | Pending |
+| CI-04 | Phase 8 | Pending |
+| CI-05 | Phase 8 | Pending |
+| CI-06 | Phase 8 | Pending |
+| CI-07 | Phase 8 | Pending |
+| CI-08 | Phase 8 | Pending |
+| CI-09 | Phase 8 | Pending |
+| CI-10 | Phase 8 | Pending |
+| HARD-01 | Phase 9 | Pending |
+| HARD-02 | Phase 9 | Pending |
+| HARD-03 | Phase 9 | Pending |
+| HARD-04 | Phase 9 | Pending |
+| HARD-05 | Phase 9 | Pending |
+| HARD-06 | Phase 9 | Pending |
+| HARD-07 | Phase 9 | Pending |
+| HARD-08 | Phase 9 | Pending |
+| HARD-09 | Phase 9 | Pending |
+| HARD-10 | Phase 9 | Pending |
+| HARD-11 | Phase 9 | Pending |
+| HARD-12 | Phase 9 | Pending |
+| HARD-13 | Phase 9 | Pending |
+| HARD-14 | Phase 9 | Pending |
 
 **Coverage:**
-- v1 requirements: 43 total
-- Mapped to phases: 43 (Phases 1-5)
+- v1 requirements: 79 total
+- Mapped to phases: 79 (Phases 1-9)
 - Unmapped: 0
-- Phase 6: Integration phase (validates all requirements, introduces no new ones)
+- Phase 6: Integration phase (validates core requirements, introduces no new ones)
+- Phases 7-9: Production hardening (36 new requirements)
 
 ---
 *Requirements defined: 2026-02-02*
-*Last updated: 2026-02-02 after roadmap creation*
+*Last updated: 2026-02-03 after adding production hardening phases*

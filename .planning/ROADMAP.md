@@ -2,12 +2,12 @@
 
 ## Overview
 
-MSW Protocol delivers an autonomous coding system that bridges NotebookLM and coding agents. The journey starts with browser automation (the highest-risk blocking dependency), builds the Auto-Conversation Engine (core differentiator), adds bidirectional communication and knowledge persistence, wraps everything in an MCP server, integrates with GSD and Ralph execution patterns, and culminates in end-to-end integration testing. Each phase delivers a complete, verifiable capability that unlocks the next.
+MSW Protocol delivers an autonomous coding system that bridges NotebookLM and coding agents. The journey starts with browser automation (the highest-risk blocking dependency), builds the Auto-Conversation Engine (core differentiator), adds bidirectional communication and knowledge persistence, wraps everything in an MCP server, integrates with GSD and Ralph execution patterns, validates end-to-end integration, and culminates with production hardening through comprehensive testing, CI/CD automation, and operational excellence features. Each phase delivers a complete, verifiable capability that unlocks the next.
 
 ## Phases
 
 **Phase Numbering:**
-- Integer phases (1, 2, 3, 4, 5, 6): Planned milestone work
+- Integer phases (1, 2, 3, 4, 5, 6, 7, 8, 9): Planned milestone work
 - Decimal phases (e.g., 2.1, 2.2): Urgent insertions (marked with INSERTED)
 
 Decimal phases appear between their surrounding integers in numeric order.
@@ -18,6 +18,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 4: MCP Server** - Tool handlers wrapping all engines, multi-client compatibility
 - [ ] **Phase 5: GSD + Ralph Integration** - Research-grounded planning and continuous execution with feedback
 - [ ] **Phase 6: End-to-End Integration** - Full workflow validation, production hardening, documentation
+- [ ] **Phase 7: Automated Testing Suite** - Unit, integration, and E2E tests with 80%+ coverage
+- [ ] **Phase 8: CI/CD Pipeline** - GitHub Actions automation with multi-Node validation
+- [ ] **Phase 9: Production Hardening** - Structured logging, rate limiting, demo mode, self-healing diagnostics
 
 ## Phase Details
 
@@ -51,15 +54,15 @@ Plans:
   3. Multi-level expansion continues through at least 5 levels of suggested topics until no new relevant topics appear
   4. Local LLM relevance scoring (0-100) filters out low-value topics before clicking
   5. Rate limit tracking displays warning when approaching 50 queries/day and batches queries intelligently
-**Plans**: TBD
+**Plans**: 6 plans in 3 waves
 
 Plans:
-- [ ] 02-01: Topic pill detection and extraction
-- [ ] 02-02: Topic click automation with response capture
-- [ ] 02-03: Multi-level topic expansion with depth tracking
-- [ ] 02-04: Local LLM relevance scoring integration
-- [ ] 02-05: Configurable relevance threshold filtering
-- [ ] 02-06: Query batching and rate limit tracking
+- [ ] 02-01-PLAN.md — Topic pill detection and extraction (Wave 1)
+- [ ] 02-02-PLAN.md — Topic click automation with response capture (Wave 1)
+- [ ] 02-03-PLAN.md — Multi-level topic expansion with depth tracking (Wave 2)
+- [ ] 02-04-PLAN.md — Local LLM relevance scoring integration (Wave 2)
+- [ ] 02-05-PLAN.md — Configurable relevance threshold filtering (Wave 2)
+- [ ] 02-06-PLAN.md — Query batching and rate limit tracking (Wave 3)
 
 ### Phase 3: Bidirectional Communication + Knowledge Persistence
 **Goal**: Two-way bridge where agent errors flow to NotebookLM and grounded answers flow back, with all Q&A persisted to git
@@ -143,21 +146,84 @@ Plans:
 - [ ] 06-04-PLAN.md — Pipeline orchestrator with crash recovery (Wave 2)
 - [ ] 06-05-PLAN.md — Barrel exports + SETUP.md documentation (Wave 3)
 
+### Phase 7: Automated Testing Suite
+**Goal**: Comprehensive test coverage across unit, integration, and E2E levels with 80%+ coverage on critical paths
+**Depends on**: Phase 6 (requires complete system for E2E testing)
+**Requirements**: TEST-01, TEST-02, TEST-03, TEST-04, TEST-05, TEST-06, TEST-07, TEST-08, TEST-09, TEST-10, TEST-11, TEST-12
+**Success Criteria** (what must be TRUE):
+  1. Unit tests cover all core modules (auth, backup, config, degradation) with mocked dependencies
+  2. Integration tests validate multi-component workflows (auth flow, backup-restore flow)
+  3. E2E tests validate complete user workflows (NotebookLM upload, error-to-resolution pipeline)
+  4. Test coverage reports show 80%+ coverage on critical paths (browser automation, MCP tools, execution engines)
+  5. Mock NotebookLM UI enables deterministic testing without live NotebookLM dependency
+**Plans:** 6 plans in 3 waves
+
+Plans:
+- [ ] 07-01-PLAN.md — Vitest infrastructure + coverage reporting (Wave 1)
+- [ ] 07-02-PLAN.md — Unit tests: auth, backup, config, degradation modules (Wave 1)
+- [ ] 07-03-PLAN.md — Mock NotebookLM UI + selector test fixtures (Wave 2)
+- [ ] 07-04-PLAN.md — Integration tests: auth flow, backup-restore flow (Wave 2)
+- [ ] 07-05-PLAN.md — E2E tests: NotebookLM upload, error-to-resolution pipeline (Wave 2)
+- [ ] 07-06-PLAN.md — Snapshot testing + coverage validation (Wave 3)
+
+### Phase 8: CI/CD Pipeline
+**Goal**: Automated build, test, and validation pipeline with multi-Node version support and PR quality gates
+**Depends on**: Phase 7 (requires test suite to automate)
+**Requirements**: CI-01, CI-02, CI-03, CI-04, CI-05, CI-06, CI-07, CI-08, CI-09, CI-10
+**Success Criteria** (what must be TRUE):
+  1. GitHub Actions workflow runs on every commit and PR with build, test, lint, and type-check steps
+  2. Multi-Node version matrix (18, 20, 22) validates compatibility across LTS versions
+  3. PRs failing critical tests, type checks, or linting are automatically rejected
+  4. Coverage regression detection prevents merging PRs that reduce test coverage below threshold
+  5. Automated release process tags versions and generates changelogs from commit history
+**Plans:** 5 plans in 3 waves
+
+Plans:
+- [ ] 08-01-PLAN.md — GitHub Actions workflow scaffold + Node matrix (Wave 1)
+- [ ] 08-02-PLAN.md — Build verification + TypeScript type checking (Wave 1)
+- [ ] 08-03-PLAN.md — Linting + formatting enforcement (Wave 2)
+- [ ] 08-04-PLAN.md — Coverage regression + security scanning (Wave 2)
+- [ ] 08-05-PLAN.md — Automated release tagging + changelog generation (Wave 3)
+
+### Phase 9: Production Hardening
+**Goal**: Operational excellence through structured logging, rate limiting, demo mode, self-healing diagnostics, and session management
+**Depends on**: Phase 8 (requires CI/CD for continuous validation of production features)
+**Requirements**: HARD-01, HARD-02, HARD-03, HARD-04, HARD-05, HARD-06, HARD-07, HARD-08, HARD-09, HARD-10, HARD-11, HARD-12, HARD-13, HARD-14
+**Success Criteria** (what must be TRUE):
+  1. Structured logs via Pino are written to `.msw/logs/` with rotation and configurable log levels
+  2. Rate limiting handler tracks NotebookLM requests, warns before quota, and displays dashboard with usage/remaining/reset
+  3. Interactive demo mode guides new users through setup with sample notebook and safe fallback
+  4. Self-healing diagnostics detect common issues (Chrome profile lock, selector failures) and auto-fix when possible
+  5. Session management dashboard shows active operations with progress tracking and cancellation support
+**Plans:** 6 plans in 3 waves
+
+Plans:
+- [ ] 09-01-PLAN.md — Structured logging infrastructure with Pino + log rotation (Wave 1)
+- [ ] 09-02-PLAN.md — Rate limiting handler + usage dashboard (Wave 1)
+- [ ] 09-03-PLAN.md — Interactive demo mode + sample notebook fallback (Wave 2)
+- [ ] 09-04-PLAN.md — Self-healing diagnostics + auto-fix handlers (Wave 2)
+- [ ] 09-05-PLAN.md — Performance metrics tracking + JSON export (Wave 2)
+- [ ] 09-06-PLAN.md — Session management dashboard + crash resumption (Wave 3)
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 (Decimal phases, if inserted, execute between their surrounding integers)
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Browser Automation Foundation | 0/6 | Planned (4 waves) | - |
 | 2. Auto-Conversation Engine | 0/6 | Not started | - |
-| 3. Bidirectional Communication | 0/8 | Not started | - |
+| 3. Bidirectional Communication | 0/6 | Not started | - |
 | 4. MCP Server | 0/8 | Not started | - |
 | 5. GSD + Ralph Integration | 0/8 | Planned (4 waves) | - |
 | 6. End-to-End Integration | 0/5 | Planned (3 waves) | - |
+| 7. Automated Testing Suite | 0/6 | Planned (3 waves) | - |
+| 8. CI/CD Pipeline | 0/5 | Planned (3 waves) | - |
+| 9. Production Hardening | 0/6 | Planned (3 waves) | - |
 
 ---
 *Roadmap created: 2026-02-02*
-*Depth: comprehensive (6 phases, 41 plans)*
+*Extended: 2026-02-03 with production hardening phases (7, 8, 9)*
+*Depth: comprehensive (9 phases, 56 plans)*
