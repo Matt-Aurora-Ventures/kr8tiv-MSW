@@ -9,7 +9,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "test:validate-coverage": "vitest run --coverage && node scripts/validate-coverage.js"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
