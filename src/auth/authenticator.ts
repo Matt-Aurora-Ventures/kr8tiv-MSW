@@ -11,6 +11,8 @@
 import type { Page, BrowserContext } from 'playwright';
 import { BrowserDriver } from '../browser/driver.js';
 import { ProfileManager } from '../browser/profile.js';
+import { BackupManager } from '../backup/index.js';
+import { globalDegradation } from '../common/degradation.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
@@ -20,6 +22,8 @@ export interface AuthConfig {
   headless?: boolean;
   timeout?: number;
   validateAuth?: boolean;
+  maxRetries?: number;
+  backupBeforeAuth?: boolean;
 }
 
 export interface AuthResult {
@@ -37,6 +41,7 @@ const AUTH_TIMEOUT = 120000; // 2 minutes for manual login
 export class Authenticator {
   private driver: BrowserDriver | null = null;
   private config: Required<AuthConfig>;
+  private backupManager: BackupManager;
 
   constructor(config?: AuthConfig) {
     this.config = {
@@ -44,14 +49,71 @@ export class Authenticator {
       headless: config?.headless ?? false, // Default visible for auth
       timeout: config?.timeout ?? AUTH_TIMEOUT,
       validateAuth: config?.validateAuth ?? true,
+      maxRetries: config?.maxRetries ?? 3,
+      backupBeforeAuth: config?.backupBeforeAuth ?? true,
+    };
+    this.backupManager = new BackupManager();
+  }
+
+  /**
+   * Authenticate with Google and NotebookLM with retry logic.
+   * Opens browser for manual login if not already authenticated.
+   */
+  async authenticate(): Promise<AuthResult> {
+    // Backup before authentication if enabled
+    if (this.config.backupBeforeAuth) {
+      try {
+        await this.backupManager.createBackup('before-authentication');
+        console.log('[auth] Created backup before authentication');
+      } catch (err) {
+        console.warn('[auth] Backup failed, continuing anyway:', err);
+      }
+    }
+
+    // Retry logic with exponential backoff
+    let lastError: string | undefined;
+    for (let attempt = 1; attempt <= this.config.maxRetries; attempt++) {
+      try {
+        console.log(`[auth] Authentication attempt ${attempt}/${this.config.maxRetries}`);
+
+        const result = await this.authenticateOnce();
+
+        if (result.success) {
+          return result;
+        }
+
+        lastError = result.error;
+
+        // Don't retry if user explicitly cancelled
+        if (result.error?.includes('cancelled') || result.error?.includes('timeout')) {
+          break;
+        }
+
+        // Exponential backoff (2s, 4s, 8s)
+        if (attempt < this.config.maxRetries) {
+          const delay = Math.pow(2, attempt) * 1000;
+          console.log(`[auth] Retrying in ${delay/1000}s...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+
+      } catch (err) {
+        lastError = err instanceof Error ? err.message : String(err);
+        console.error(`[auth] Attempt ${attempt} failed:`, lastError);
+      }
+    }
+
+    return {
+      success: false,
+      authenticated: false,
+      profilePath: this.config.profileDir,
+      error: `Authentication failed after ${this.config.maxRetries} attempts. Last error: ${lastError}`,
     };
   }
 
   /**
-   * Authenticate with Google and NotebookLM.
-   * Opens browser for manual login if not already authenticated.
+   * Single authentication attempt (internal)
    */
-  async authenticate(): Promise<AuthResult> {
+  private async authenticateOnce(): Promise<AuthResult> {
     try {
       // Check if already authenticated
       if (await this.isAuthenticated()) {
@@ -63,15 +125,42 @@ export class Authenticator {
         };
       }
 
-      // Launch browser for manual login
-      this.driver = new BrowserDriver({
-        profileDir: this.config.profileDir,
-        headless: this.config.headless,
-        viewport: { width: 1280, height: 720 },
-      });
+      // Launch browser with fallback to visible mode
+      const { result: browserContext, context: degradationContext } = await globalDegradation.withFallbacks(
+        'browser-launch',
+        [
+          {
+            name: this.config.headless ? 'headless-mode' : 'visible-mode',
+            fn: async () => {
+              this.driver = new BrowserDriver({
+                profileDir: this.config.profileDir,
+                headless: this.config.headless,
+                viewport: { width: 1280, height: 720 },
+              });
+              return await this.driver.launch();
+            },
+          },
+          ...(this.config.headless ? [{
+            name: 'fallback-visible-mode',
+            fn: async () => {
+              console.log('[auth] Headless mode failed, falling back to visible browser');
+              this.driver = new BrowserDriver({
+                profileDir: this.config.profileDir,
+                headless: false,
+                viewport: { width: 1280, height: 720 },
+              });
+              return await this.driver.launch();
+            },
+          }] : []),
+        ],
+      );
 
-      const context = await this.driver.launch();
-      const page = await this.driver.getPage();
+      if (!browserContext) {
+        throw new Error(`Browser launch failed: ${degradationContext.userMessage}`);
+      }
+
+      console.log(`[auth] ${degradationContext.userMessage}`);
+      const page = await this.driver!.getPage();
 
       // Navigate to NotebookLM
       console.log('[auth] Opening NotebookLM for authentication...');
@@ -88,7 +177,7 @@ export class Authenticator {
       if (this.config.validateAuth) {
         const validated = await this.validateAuthentication(page);
         if (!validated) {
-          await this.driver.close();
+          await this.driver!.close();
           return {
             success: false,
             authenticated: false,
@@ -102,7 +191,7 @@ export class Authenticator {
       await this.saveAuthState();
 
       // Close browser
-      await this.driver.close();
+      await this.driver!.close();
 
       return {
         success: true,

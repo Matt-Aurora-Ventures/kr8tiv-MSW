@@ -1,2 +1,1 @@
-export { MswConfigSchema, type MswConfig } from './schema.js';
-export { loadConfig, validateConfig, type ValidationResult } from './validator.js';
+export { ConfigManager, type MswConfig, type ValidationResult } from './manager.js';

@@ -9,6 +9,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import { execSync } from 'node:child_process';
+import { ConfigManager } from '../config/index.js';
 
 export interface HealthCheck {
   name: string;
@@ -32,6 +33,7 @@ export class HealthChecker {
     await this.checkNodeVersion();
     await this.checkMcpConfig();
     await this.checkDistBuild();
+    await this.checkProjectConfig();
     await this.checkAuth();
     await this.checkPlaywright();
     await this.checkNetworkConnectivity();
@@ -179,6 +181,55 @@ export class HealthChecker {
       name: 'dist_build',
       status: 'pass',
       message: 'Build up to date',
+    });
+  }
+
+  private async checkProjectConfig(): Promise<void> {
+    const configManager = new ConfigManager();
+
+    if (!configManager.configExists()) {
+      this.checks.push({
+        name: 'project_config',
+        status: 'warn',
+        message: 'No .msw/config.json found (using defaults)',
+        fix: [
+          'Run: msw_init to create config',
+          'Or manually create .msw/config.json',
+        ],
+      });
+      return;
+    }
+
+    const { config, validation } = configManager.loadConfig();
+
+    if (!validation.valid) {
+      this.checks.push({
+        name: 'project_config',
+        status: 'fail',
+        message: `Config validation failed: ${validation.errors.join(', ')}`,
+        fix: [
+          'Fix config.json errors',
+          'Or delete .msw/config.json and run msw_init',
+          'See SETUP.md for config schema',
+        ],
+      });
+      return;
+    }
+
+    if (validation.warnings.length > 0) {
+      this.checks.push({
+        name: 'project_config',
+        status: 'warn',
+        message: `Config loaded with warnings: ${validation.warnings.join(', ')}`,
+        fix: validation.migrated ? ['Config was auto-migrated - review changes'] : [],
+      });
+      return;
+    }
+
+    this.checks.push({
+      name: 'project_config',
+      status: 'pass',
+      message: `Config valid (v${config.version})`,
     });
   }
 
