@@ -108,29 +108,33 @@ MSW creates an **Auto-Conversation Engine** that:
 
 ## Quick Start
 
-```bash
-# Clone
+### Automated Install (Recommended)
+
+**Windows (PowerShell)**:
+```powershell
 git clone https://github.com/Matt-Aurora-Ventures/kr8tiv-MSW.git
 cd kr8tiv-MSW
-
-# Install
-npm install
-
-# Build
-npm run build
-
-# Wire into Claude Code (~/.claude/mcp.json)
-{
-  "mcpServers": {
-    "msw": {
-      "command": "node",
-      "args": ["/path/to/kr8tiv-MSW/dist/mcp/index.js"]
-    }
-  }
-}
+.\setup.ps1
 ```
 
-Then restart your IDE. The MSW tools will appear automatically.
+**Linux/macOS (Bash)**:
+```bash
+git clone https://github.com/Matt-Aurora-Ventures/kr8tiv-MSW.git
+cd kr8tiv-MSW
+chmod +x setup.sh && ./setup.sh
+```
+
+The setup script will:
+- ✅ Install dependencies
+- ✅ Build TypeScript
+- ✅ Configure MCP for Claude Code/Cursor/Windsurf
+- ✅ Set up authentication flow
+
+Then **restart your IDE** and the MSW tools will appear automatically.
+
+### Manual Install
+
+See [SETUP.md](./SETUP.md) for detailed installation and authentication instructions.
 
 ---
 
@@ -150,6 +154,16 @@ Then restart your IDE. The MSW tools will appear automatically.
 
 ## Documentation
 
+### Setup & Troubleshooting
+
+| Document | Description |
+|----------|-------------|
+| **[SETUP.md](./SETUP.md)** | Complete installation and authentication guide |
+| **[TROUBLESHOOTING.md](./TROUBLESHOOTING.md)** | Common issues and solutions |
+| **[CONTRIBUTING.md](./CONTRIBUTING.md)** | How to contribute to MSW (coming soon) |
+
+### Design & Architecture
+
 All design documents, research reports, and reference material live in [`docs/`](./docs/):
 
 | Document | Description |
@@ -161,7 +175,6 @@ All design documents, research reports, and reference material live in [`docs/`]
 | [Ralph Loop & MCP](docs/ralph-loop-and-mcp.md) | Advanced agentic orchestration |
 | [Strategic Playbook](docs/strategic-playbook.md) | Go-to-market strategy |
 | [GSD Ralph Prompt](docs/GSD_RALPH_PROMPT.md) | GSD + Ralph integration prompt |
-| [SETUP.md](SETUP.md) | Detailed setup instructions |
 
 ---
 
