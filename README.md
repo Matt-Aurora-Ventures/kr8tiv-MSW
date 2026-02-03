@@ -162,7 +162,14 @@ See [SETUP.md](./SETUP.md) for detailed installation and authentication instruct
 |----------|-------------|
 | **[SETUP.md](./SETUP.md)** | Complete installation and authentication guide |
 | **[TROUBLESHOOTING.md](./TROUBLESHOOTING.md)** | Common issues and solutions |
-| **[CONTRIBUTING.md](./CONTRIBUTING.md)** | How to contribute to MSW (coming soon) |
+| **[CONTRIBUTING.md](./CONTRIBUTING.md)** | Development guidelines and PR process |
+
+### Examples & Workflows
+
+| Example | Description | Time |
+|---------|-------------|------|
+| **[VPS Debugging](./examples/01-vps-debugging.md)** | Fix bot crashes using NotebookLM knowledge | 10 min |
+| **[Feature Planning](./examples/02-feature-planning.md)** | Research → PRD → Execute with GSD + Ralph | 20 min |
 
 ### Design & Architecture
 
