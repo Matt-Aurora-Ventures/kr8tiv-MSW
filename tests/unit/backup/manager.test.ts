@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+// vitest globals enabled - no import needed
 import { BackupManager } from "../../../src/backup/manager.js";
 import { createTestDir, cleanupTestDir } from "../../setup.js";
 import fs from "node:fs";

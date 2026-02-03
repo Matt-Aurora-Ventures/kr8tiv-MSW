@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+// vitest globals enabled - no import needed
 import { DegradationHandler } from "../../../src/common/degradation.js";
 
 describe("DegradationHandler", () => {

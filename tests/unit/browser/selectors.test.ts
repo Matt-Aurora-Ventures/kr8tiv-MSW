@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+// vitest globals enabled - no import needed
 import { chromium, type Browser, type Page } from "playwright";
 import { startMockNotebookLM, type MockNotebookLMServer } from "../../helpers/mock-notebooklm.js";
 import { Selectors } from "../../../src/browser/selectors.js";
