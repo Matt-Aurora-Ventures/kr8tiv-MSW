@@ -16,6 +16,7 @@ import {
   DEFAULT_USER_AGENT,
 } from '../types/browser.js';
 import { createLogger } from '../logging/index.js';
+import { runHealthCheck } from '../diagnostics/index.js';
 
 const logger = createLogger('browser-driver');
 
@@ -46,6 +47,23 @@ export class BrowserDriver {
     }
 
     logger.info('Launching browser context');
+
+    // Run health checks before launching browser
+    const healthCheck = await runHealthCheck({ autoFix: true });
+    const failedChecks = healthCheck.checks.filter(c => !c.passed);
+    logger.info({
+      status: healthCheck.status,
+      canProceed: healthCheck.canProceed,
+      failedChecks: failedChecks.length,
+      appliedFixes: healthCheck.fixes.filter(f => f.success).length
+    }, 'Pre-launch health check completed');
+
+    if (!healthCheck.canProceed) {
+      logger.error({ failedChecks }, 'Health check failed - cannot proceed');
+      throw new Error(
+        `Browser launch blocked by health check failures:\n${failedChecks.map(c => `- ${c.message}`).join('\n')}`
+      );
+    }
 
     // Ensure profile directory exists and acquire lock
     const profileDir = this.profileManager.getProfileDir();
