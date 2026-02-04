@@ -58,19 +58,19 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### GSD Integration
 
-- [ ] **GSD-01**: State persistence via STATE.md, ROADMAP.md, PROJECT.md files
-- [ ] **GSD-02**: Research-grounded planning injects NotebookLM findings into PRD generation
-- [ ] **GSD-03**: Phase plans include references to supporting research
-- [ ] **GSD-04**: GSD format adapter translates between MSW and GSD XML task structure
+- [x] **GSD-01**: State persistence via STATE.md, ROADMAP.md, PROJECT.md files
+- [x] **GSD-02**: Research-grounded planning injects NotebookLM findings into PRD generation
+- [x] **GSD-03**: Phase plans include references to supporting research
+- [x] **GSD-04**: GSD format adapter translates between MSW and GSD XML task structure
 
 ### Ralph Loop Integration
 
-- [ ] **RALPH-01**: Stop hook intercepts agent exit attempts
-- [ ] **RALPH-02**: Iteration tracking counts attempts and respects max-iterations
-- [ ] **RALPH-03**: NotebookLM feedback queries research on detected failures
-- [ ] **RALPH-04**: Context injection prepends NotebookLM guidance to next iteration
-- [ ] **RALPH-05**: Completion detection checks for success criteria before stopping
-- [ ] **RALPH-06**: Behavioral verification validates actual functionality, not just structure
+- [x] **RALPH-01**: Stop hook intercepts agent exit attempts
+- [x] **RALPH-02**: Iteration tracking counts attempts and respects max-iterations
+- [x] **RALPH-03**: NotebookLM feedback queries research on detected failures
+- [x] **RALPH-04**: Context injection prepends NotebookLM guidance to next iteration
+- [x] **RALPH-05**: Completion detection checks for success criteria before stopping
+- [x] **RALPH-06**: Behavioral verification validates actual functionality, not just structure
 
 ### Automated Testing
 
@@ -187,16 +187,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MCP-08 | Phase 4 | Complete |
 | MCP-09 | Phase 4 | Complete |
 | MCP-10 | Phase 4 | Complete |
-| GSD-01 | Phase 5 | Pending |
-| GSD-02 | Phase 5 | Pending |
-| GSD-03 | Phase 5 | Pending |
-| GSD-04 | Phase 5 | Pending |
-| RALPH-01 | Phase 5 | Pending |
-| RALPH-02 | Phase 5 | Pending |
-| RALPH-03 | Phase 5 | Pending |
-| RALPH-04 | Phase 5 | Pending |
-| RALPH-05 | Phase 5 | Pending |
-| RALPH-06 | Phase 5 | Pending |
+| GSD-01 | Phase 5 | Complete |
+| GSD-02 | Phase 5 | Complete |
+| GSD-03 | Phase 5 | Complete |
+| GSD-04 | Phase 5 | Complete |
+| RALPH-01 | Phase 5 | Complete |
+| RALPH-02 | Phase 5 | Complete |
+| RALPH-03 | Phase 5 | Complete |
+| RALPH-04 | Phase 5 | Complete |
+| RALPH-05 | Phase 5 | Complete |
+| RALPH-06 | Phase 5 | Complete |
 | TEST-01 | Phase 7 | Pending |
 | TEST-02 | Phase 7 | Pending |
 | TEST-03 | Phase 7 | Pending |
