@@ -42,6 +42,7 @@
   "description": "**Make Shit Work** — An autonomous coding system that bridges NotebookLM and coding agents through an automated conversation engine.",
   "main": "dist/index.js",
   "bin": {
+    "msw": "./bin/msw.js",
     "msw-mcp-server": "./dist/mcp/index.js"
   },
   "keywords": [],
