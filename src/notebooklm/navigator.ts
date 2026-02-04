@@ -7,9 +7,11 @@ import type { Page } from 'playwright';
 import type { NotebookConnection } from '../types/browser.js';
 import { createLogger } from '../logging/index.js';
 import { QuotaTracker } from '../rate-limiting/index.js';
+import { getMetricsCollector } from '../metrics/index.js';
 
 const logger = createLogger('notebook-navigator');
 const quotaTracker = new QuotaTracker();
+const metrics = getMetricsCollector();
 
 export class NotebookNavigator {
   private page: Page;
@@ -74,37 +76,39 @@ export class NotebookNavigator {
   }
 
   /**
-   * Submit a query to NotebookLM with rate limiting enforcement.
+   * Submit a query to NotebookLM with rate limiting enforcement and performance tracking.
    * Throws an error if quota is exceeded.
    */
   async submitQuery(query: string): Promise<void> {
-    // Check quota before submitting
-    const quotaCheck = quotaTracker.canRequest();
-    if (!quotaCheck.allowed) {
-      logger.error({
-        remaining: quotaCheck.usage.remaining,
-        limit: quotaCheck.usage.limit
-      }, 'Query quota exceeded');
-      throw new Error(
-        `Daily query quota exceeded (${quotaCheck.usage.used}/${quotaCheck.usage.limit}). ` +
-        `Quota resets at midnight UTC. Current usage: ${quotaCheck.usage.percentUsed}%`,
-      );
-    }
+    return metrics.measureAsync('notebooklm.query', async () => {
+      // Check quota before submitting
+      const quotaCheck = quotaTracker.canRequest();
+      if (!quotaCheck.allowed) {
+        logger.error({
+          remaining: quotaCheck.usage.remaining,
+          limit: quotaCheck.usage.limit
+        }, 'Query quota exceeded');
+        throw new Error(
+          `Daily query quota exceeded (${quotaCheck.usage.used}/${quotaCheck.usage.limit}). ` +
+          `Quota resets at midnight UTC. Current usage: ${quotaCheck.usage.percentUsed}%`,
+        );
+      }
 
-    // Log warning if approaching quota
-    if (quotaCheck.warning) {
-      logger.warn({ remaining: quotaCheck.usage.remaining }, quotaCheck.warning);
-    }
+      // Log warning if approaching quota
+      if (quotaCheck.warning) {
+        logger.warn({ remaining: quotaCheck.usage.remaining }, quotaCheck.warning);
+      }
 
-    logger.info({ query: query.substring(0, 100) }, 'Submitting query to NotebookLM');
+      logger.info({ query: query.substring(0, 100) }, 'Submitting query to NotebookLM');
 
-    // Submit the query
-    const inputBox = this.page.getByRole('textbox', { name: /ask|type/i });
-    await inputBox.fill(query);
-    await inputBox.press('Enter');
+      // Submit the query
+      const inputBox = this.page.getByRole('textbox', { name: /ask|type/i });
+      await inputBox.fill(query);
+      await inputBox.press('Enter');
 
-    // Record successful query
-    quotaTracker.recordRequest();
-    logger.debug({ remaining: quotaCheck.usage.remaining - 1 }, 'Query submitted successfully');
+      // Record successful query
+      quotaTracker.recordRequest();
+      logger.debug({ remaining: quotaCheck.usage.remaining - 1 }, 'Query submitted successfully');
+    });
   }
 }

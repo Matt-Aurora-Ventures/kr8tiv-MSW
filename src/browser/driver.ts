@@ -17,8 +17,10 @@ import {
 } from '../types/browser.js';
 import { createLogger } from '../logging/index.js';
 import { runHealthCheck } from '../diagnostics/index.js';
+import { getMetricsCollector } from '../metrics/index.js';
 
 const logger = createLogger('browser-driver');
+const metrics = getMetricsCollector();
 
 export class BrowserDriver {
   private config: LaunchOptions;
@@ -46,52 +48,54 @@ export class BrowserDriver {
       return this.context;
     }
 
-    logger.info('Launching browser context');
+    return metrics.measureAsync('browser.launch', async () => {
+      logger.info('Launching browser context');
 
-    // Run health checks before launching browser
-    const healthCheck = await runHealthCheck({ autoFix: true });
-    const failedChecks = healthCheck.checks.filter(c => !c.passed);
-    logger.info({
-      status: healthCheck.status,
-      canProceed: healthCheck.canProceed,
-      failedChecks: failedChecks.length,
-      appliedFixes: healthCheck.fixes.filter(f => f.success).length
-    }, 'Pre-launch health check completed');
+      // Run health checks before launching browser
+      const healthCheck = await runHealthCheck({ autoFix: true });
+      const failedChecks = healthCheck.checks.filter(c => !c.passed);
+      logger.info({
+        status: healthCheck.status,
+        canProceed: healthCheck.canProceed,
+        failedChecks: failedChecks.length,
+        appliedFixes: healthCheck.fixes.filter(f => f.success).length
+      }, 'Pre-launch health check completed');
 
-    if (!healthCheck.canProceed) {
-      logger.error({ failedChecks }, 'Health check failed - cannot proceed');
-      throw new Error(
-        `Browser launch blocked by health check failures:\n${failedChecks.map(c => `- ${c.message}`).join('\n')}`
+      if (!healthCheck.canProceed) {
+        logger.error({ failedChecks }, 'Health check failed - cannot proceed');
+        throw new Error(
+          `Browser launch blocked by health check failures:\n${failedChecks.map(c => `- ${c.message}`).join('\n')}`
+        );
+      }
+
+      // Ensure profile directory exists and acquire lock
+      const profileDir = this.profileManager.getProfileDir();
+      logger.debug({ profileDir }, 'Profile directory acquired');
+
+      // Get stealth-configured chromium
+      const chromium = configureStealthBrowser();
+
+      const launchArgs = [
+        '--disable-blink-features=AutomationControlled',
+        '--no-first-run',
+        '--no-default-browser-check',
+        ...(this.config.args ?? []),
+      ];
+
+      this.context = await chromium.launchPersistentContext(
+        profileDir,
+        {
+          headless: false, // Hardcoded: Google detects headless mode
+          args: launchArgs,
+          viewport: this.config.viewport,
+          userAgent: this.config.userAgent ?? DEFAULT_USER_AGENT,
+          ignoreDefaultArgs: ['--enable-automation'],
+        },
       );
-    }
 
-    // Ensure profile directory exists and acquire lock
-    const profileDir = this.profileManager.getProfileDir();
-    logger.debug({ profileDir }, 'Profile directory acquired');
-
-    // Get stealth-configured chromium
-    const chromium = configureStealthBrowser();
-
-    const launchArgs = [
-      '--disable-blink-features=AutomationControlled',
-      '--no-first-run',
-      '--no-default-browser-check',
-      ...(this.config.args ?? []),
-    ];
-
-    this.context = await chromium.launchPersistentContext(
-      profileDir,
-      {
-        headless: false, // Hardcoded: Google detects headless mode
-        args: launchArgs,
-        viewport: this.config.viewport,
-        userAgent: this.config.userAgent ?? DEFAULT_USER_AGENT,
-        ignoreDefaultArgs: ['--enable-automation'],
-      },
-    );
-
-    logger.info('Browser context launched successfully');
-    return this.context;
+      logger.info('Browser context launched successfully');
+      return this.context;
+    });
   }
 
   /**
