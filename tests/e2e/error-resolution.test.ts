@@ -16,12 +16,13 @@ describe("Error-to-resolution pipeline E2E", () => {
     mockServer = await startMockNotebookLM();
     projectDir = createTestDir("e2e-error-resolution");
 
-    // Initialize project
+    // Initialize project (skip auth for testing)
     await tc.client.callTool({
       name: "msw_init",
       arguments: {
         projectDir,
-        notebookUrl: mockServer.url,
+        notebookUrls: [mockServer.url],
+        skipAuth: true,
       },
     });
   }, 30000);

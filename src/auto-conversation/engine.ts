@@ -1,22 +1,27 @@
 /**
  * TopicExpansionEngine — Orchestrates BFS topic expansion across NotebookLM.
  *
- * Combines TopicDetector, RelevanceScorer, BudgetTracker, TopicClicker,
+ * Combines TopicDetector, LLM Router (for scoring), BudgetTracker, TopicClicker,
  * and ExpansionState into a single expansion pipeline:
- *   detect pills -> score -> click -> extract -> discover new pills -> repeat
+ *   detect pills -> score (via LLM) -> click -> extract -> discover new pills -> repeat
+ *
+ * The LLM router provides intelligent scoring with fallbacks:
+ *   1. Ollama (local, fast) → 2. Gemini CLI (cloud) → 3. String-similarity (fallback)
  */
 
 import type { Page } from 'playwright';
 import type { ExpansionConfig, ExpansionResult, ScoredTopic } from './types.js';
 import { TopicDetector } from './topic-detector.js';
-import { RelevanceScorer } from './relevance-scorer.js';
 import { BudgetTracker } from './budget-tracker.js';
 import { TopicClicker } from './topic-clicker.js';
 import { ExpansionState } from './expansion-state.js';
+import { scoreRelevance, checkProviders } from '../llm/router.js';
+import { createLogger } from '../logging/index.js';
+
+const logger = createLogger('topic-expansion-engine');
 
 export class TopicExpansionEngine {
   private readonly detector: TopicDetector;
-  private readonly scorer: RelevanceScorer;
   private readonly budget: BudgetTracker;
   private readonly clicker: TopicClicker;
   private readonly state: ExpansionState;
@@ -27,18 +32,22 @@ export class TopicExpansionEngine {
   constructor({ page, config }: { page: Page; config: ExpansionConfig }) {
     this.config = config;
     this.detector = new TopicDetector(page);
-    this.scorer = new RelevanceScorer();
     this.budget = new BudgetTracker({ dailyLimit: config.maxQueries });
     this.clicker = new TopicClicker(page);
     this.state = new ExpansionState(config);
   }
 
   /**
-   * Initialize the engine: set up the relevance scorer and browser.
+   * Initialize the engine: check LLM providers and set up browser.
    */
   async initialize(): Promise<void> {
-    await this.scorer.initialize();
-    console.log('[engine] TopicExpansionEngine ready');
+    // Check which LLM providers are available for scoring
+    const providers = await checkProviders();
+    logger.info(
+      { ollama: providers.ollama, gemini: providers.gemini, preferred: providers.preferred },
+      'LLM providers initialized for relevance scoring'
+    );
+    console.log(`[engine] TopicExpansionEngine ready (LLM: ${providers.preferred || 'string-similarity'})`);
   }
 
   /**
@@ -130,14 +139,27 @@ export class TopicExpansionEngine {
     previousTopics: string[],
   ): Promise<void> {
     for (const pill of pills) {
-      const scored = await this.scorer.score(
+      // Use LLM router for intelligent relevance scoring
+      const llmScore = await scoreRelevance(
         pill,
         this.config.taskGoal,
         this.config.currentError,
         previousTopics,
       );
       // Seed topics start at level 0 with no parent
-      const topic: ScoredTopic = { ...scored, level: 0, parentTopic: null };
+      const topic: ScoredTopic = {
+        text: pill,
+        level: 0,
+        parentTopic: null,
+        score: llmScore.total,
+        reasoning: llmScore.reasoning,
+        dimensions: {
+          taskRelevance: llmScore.taskRelevance,
+          errorRelevance: llmScore.errorRelevance,
+          implementationValue: llmScore.implementationValue,
+          novelty: llmScore.novelty,
+        },
+      };
       this.state.enqueue(topic);
     }
   }
@@ -148,16 +170,25 @@ export class TopicExpansionEngine {
     previousTopics: string[],
   ): Promise<void> {
     for (const pill of pills) {
-      const scored = await this.scorer.score(
+      // Use LLM router for intelligent relevance scoring
+      const llmScore = await scoreRelevance(
         pill,
         this.config.taskGoal,
         this.config.currentError,
         previousTopics,
       );
       const topic: ScoredTopic = {
-        ...scored,
+        text: pill,
         level: parent.level + 1,
         parentTopic: parent.text,
+        score: llmScore.total,
+        reasoning: llmScore.reasoning,
+        dimensions: {
+          taskRelevance: llmScore.taskRelevance,
+          errorRelevance: llmScore.errorRelevance,
+          implementationValue: llmScore.implementationValue,
+          novelty: llmScore.novelty,
+        },
       };
       this.state.enqueue(topic);
     }

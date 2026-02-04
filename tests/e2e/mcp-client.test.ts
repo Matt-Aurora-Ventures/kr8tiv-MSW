@@ -40,7 +40,7 @@ describe("MCP E2E smoke tests", () => {
   it("msw_init creates config", async () => {
     const result = await tc.client.callTool({
       name: "msw_init",
-      arguments: { projectDir },
+      arguments: { projectDir, skipAuth: true },
     });
 
     const text = (result.content as Array<{ type: string; text: string }>)[0]
