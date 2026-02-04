@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-03)
 
 ## Current Position
 
-Phase: 8 of 9 (CI/CD Pipeline)
-Plan: 5 of 5 in current phase
-Status: Phase complete - Release automation deployed
-Last activity: 2026-02-04 - Completed 08-05-PLAN.md (Release Automation)
+Phase: 9 of 9 (Production Hardening)
+Plan: 1 of 6 in current phase
+Status: In progress - Logging infrastructure complete
+Last activity: 2026-02-04 - Completed 09-01-PLAN.md (Structured Logging Infrastructure)
 
-Progress: [██████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 29% (16/56 plans)
+Progress: [███████████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░] 30% (17/56 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 16
-- Average duration: ~15 min
-- Total execution time: ~3.9 hours
+- Total plans completed: 18
+- Average duration: ~14.5 min
+- Total execution time: ~4.25 hours
 
 **By Phase:**
 
@@ -35,11 +35,11 @@ Progress: [██████████████████████░
 | 6. E2E Integration | 0/5 | - | - |
 | 7. Testing Suite | 6/6 | ~107min | ~17.8min |
 | 8. CI/CD Pipeline | 5/5 | ~26min | ~5min |
-| 9. Production Hardening | 0/6 | - | - |
+| 9. Production Hardening | 1/6 | ~8min | ~8min |
 
 **Recent Trend:**
-- Last 5 plans: 08-01, 08-02, 08-03, 08-04, 08-05
-- Trend: CI/CD plans fastest (~5min avg) due to workflow-only changes
+- Last 5 plans: 08-02, 08-03, 08-04, 08-05, 09-01
+- Trend: Infrastructure plans quick (~8min avg), testing/integration longer (~18min avg)
 
 *Updated after each plan completion*
 
@@ -91,6 +91,10 @@ Recent decisions affecting current work:
 - [08-05]: Support both main and master branches for release triggers
 - [08-05]: [skip ci] in release commits prevents infinite workflow loops
 - [08-05]: Angular commit convention required: feat:/fix:/BREAKING CHANGE:
+- [09-01]: Pino 10.x chosen for structured logging (worker thread transports, auto-redaction)
+- [09-01]: Logs written to .msw/logs/ with daily rotation and 7-day retention
+- [09-01]: MCP-safe output: stderr only, never stdout (reserved for JSON-RPC)
+- [09-01]: Child logger pattern established for component-specific logging
 
 ### Pending Todos
 
@@ -167,10 +171,25 @@ All 5 plans executed successfully:
 
 **Verified Working:** All workflows configured, ready for GitHub Actions execution on repository.
 
+## Phase 9 Progress
+
+**Production Hardening - IN PROGRESS**
+
+Completed plans:
+1. **09-01:** Structured logging infrastructure (Pino with MCP-safe output, daily rotation)
+
+**Key Components Built:**
+- `src/logging/` - Pino structured logging with worker thread transports
+- Log rotation to `.msw/logs/` with 7-day retention
+- Child logger factory for component-specific logging
+- Automatic sensitive field redaction
+
+**Next:** 09-02 - Rate limiting handler
+
 ## Session Continuity
 
 Last session: 2026-02-04
-Stopped at: Completed 08-05-PLAN.md (Release Automation) - Phase 8 complete
+Stopped at: Completed 09-01-PLAN.md (Structured Logging Infrastructure)
 Resume file: None
 
 ---
