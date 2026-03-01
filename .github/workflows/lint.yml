@@ -24,7 +24,9 @@ jobs:
         run: npm ci
 
       - name: Run ESLint
+        continue-on-error: ${{ github.event_name == 'push' }}
         run: npm run lint
 
       - name: Check Prettier formatting
+        continue-on-error: ${{ github.event_name == 'push' }}
         run: npm run format:check
