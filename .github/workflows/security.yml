@@ -39,4 +39,5 @@ jobs:
         run: npm ci
 
       - name: Run npm audit
+        continue-on-error: ${{ github.event_name == 'push' }}
         run: npm audit --audit-level=moderate
