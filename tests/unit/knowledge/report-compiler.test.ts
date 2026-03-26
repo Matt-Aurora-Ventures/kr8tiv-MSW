@@ -279,9 +279,10 @@ describe("ReportCompiler snapshots", () => {
 
     const filePath = compiler.getFilePath(sessionId, baseDir);
 
-    expect(filePath).toMatchSnapshot();
+    // Use OS-agnostic assertions instead of snapshot (path separators differ across OS)
+    const normalized = filePath.replace(/\\\\/g, "/");
+    expect(normalized).toBe("/home/user/projects/msw/.msw/research/sessions/test-session-010.md");
     expect(filePath).toContain(sessionId);
-    // Path contains these components (OS-agnostic check)
     expect(filePath).toContain(".msw");
     expect(filePath).toContain("research");
     expect(filePath).toContain("sessions");
