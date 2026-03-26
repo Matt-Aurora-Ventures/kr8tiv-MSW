@@ -203,7 +203,7 @@ Test answer
 "
 `;
 
-exports[`ReportCompiler snapshots > generates correct file path for session 1`] = `"\\home\\user\\projects\\msw\\.msw\\research\\sessions\\test-session-010.md"`;
+exports[`ReportCompiler snapshots > generates correct file path for session 1`] = `"/home/user/projects/msw/.msw/research/sessions/test-session-010.md"`;
 
 exports[`ReportCompiler snapshots > handles Q&A pairs with no citations 1`] = `
 "---
